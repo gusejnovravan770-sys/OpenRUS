@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="cyberCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f3ff" />
+      <stop offset="100%" stop-color="#0066ff" />
+    </linearGradient>
+    <linearGradient id="cyberPink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff007f" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+    <linearGradient id="cyberDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121826" />
+      <stop offset="100%" stop-color="#070a10" />
+    </linearGradient>
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="subtleGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Shield (Hexagonal Cyberpunk Crest) -->
+  <polygon points="250,20 440,110 440,350 250,480 60,350 60,110" fill="url(#cyberDark)" stroke="#00f3ff" stroke-width="4" filter="url(#subtleGlow)" />
+  <polygon points="250,38 420,120 420,340 250,460 80,340 80,120" fill="none" stroke="#ff007f" stroke-width="1.5" stroke-dasharray="10 5" opacity="0.6" />
+
+  <!-- Bear Ears -->
+  <!-- Left Ear -->
+  <polygon points="100,100 160,80 180,140 120,160" fill="#0f172a" stroke="#00f3ff" stroke-width="3" />
+  <polygon points="115,108 152,94 165,138 128,150" fill="#ff007f" opacity="0.3" />
+  <!-- Right Ear -->
+  <polygon points="400,100 340,80 320,140 380,160" fill="#0f172a" stroke="#00f3ff" stroke-width="3" />
+  <polygon points="385,108 348,94 335,138 372,150" fill="#ff007f" opacity="0.3" />
+
+  <!-- Bear Head Forehead & Crown -->
+  <polygon points="250,90 190,140 310,140" fill="#1e293b" stroke="#00f3ff" stroke-width="2" />
+  <polygon points="190,140 250,90 140,170" fill="#161e2e" stroke="#00f3ff" stroke-width="2" />
+  <polygon points="310,140 250,90 360,170" fill="#161e2e" stroke="#00f3ff" stroke-width="2" />
+
+  <!-- Temples & Cheeks -->
+  <polygon points="140,170 190,140 180,240 110,240" fill="#0d131f" stroke="#00f3ff" stroke-width="2.5" />
+  <polygon points="360,170 310,140 320,240 390,240" fill="#0d131f" stroke="#00f3ff" stroke-width="2.5" />
+
+  <!-- Brow & Nose Bridge -->
+  <polygon points="190,140 250,160 310,140 280,220 250,240 220,220" fill="#1c2536" stroke="#00f3ff" stroke-width="2" />
+
+  <!-- Glowing Cyber Eyes / Optical Sensors -->
+  <!-- Left Eye -->
+  <polygon points="160,200 210,205 195,220 155,212" fill="#00f3ff" filter="url(#neonGlow)" />
+  <line x1="140" y1="205" x2="160" y2="200" stroke="#00f3ff" stroke-width="2" />
+  <!-- Right Eye -->
+  <polygon points="340,200 290,205 305,220 345,212" fill="#00f3ff" filter="url(#neonGlow)" />
+  <line x1="360" y1="205" x2="340" y2="200" stroke="#00f3ff" stroke-width="2" />
+
+  <!-- Center Snout / Muzzle Upper -->
+  <polygon points="220,220 250,240 280,220 290,290 250,330 210,290" fill="#111827" stroke="#ff007f" stroke-width="2" />
+
+  <!-- Glowing Cyber Nose -->
+  <polygon points="235,280 265,280 250,305" fill="#ff007f" filter="url(#neonGlow)" />
+
+  <!-- Cyber Fangs / Mandibles -->
+  <polygon points="215,315 225,315 220,345" fill="#00f3ff" filter="url(#subtleGlow)" />
+  <polygon points="285,315 275,315 280,345" fill="#00f3ff" filter="url(#subtleGlow)" />
+
+  <!-- Lower Jaw / Chin -->
+  <polygon points="210,290 250,330 220,390 190,340" fill="#0a0f18" stroke="#00f3ff" stroke-width="2" />
+  <polygon points="290,290 250,330 280,390 310,340" fill="#0a0f18" stroke="#00f3ff" stroke-width="2" />
+  <polygon points="220,390 250,330 280,390 250,420" fill="#161f30" stroke="#ff007f" stroke-width="2.5" />
+
+  <!-- Cyber Traces / Circuit Lines -->
+  <polyline points="110,240 80,270 80,320 120,360" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" />
+  <circle cx="120" cy="360" r="4" fill="#00f3ff" />
+  
+  <polyline points="390,240 420,270 420,320 380,360" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" />
+  <circle cx="380" cy="360" r="4" fill="#00f3ff" />
+
+  <!-- Typography / Brand -->
+  <text x="250" y="455" font-family="'Segoe UI', 'Ubuntu', sans-serif" font-weight="900" font-size="28" fill="#ffffff" letter-spacing="8" text-anchor="middle">OPEN<tspan fill="#00f3ff">RUS</tspan></text>
+  <text x="250" y="475" font-family="'Segoe UI', 'Ubuntu', sans-serif" font-weight="600" font-size="10" fill="#ff007f" letter-spacing="4" text-anchor="middle">CYBERPUNK OS</text>
+</svg>

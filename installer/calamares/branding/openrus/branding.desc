@@ -1,0 +1,34 @@
+---
+componentName:  openrus
+welcomeStyleCalamares: false
+welcomeExpandingLogo: true
+windowExpanding: normal
+windowSize: 850px,560px
+windowPlacement: center
+
+strings:
+    productName:         "OpenRUS Cyberpunk Edition"
+    shortProductName:    "OpenRUS"
+    version:             "1.0.4-LTS"
+    shortVersion:        "1.0.4"
+    versionedName:       "OpenRUS Cyberpunk Edition 1.0.4"
+    shortVersionedName:  "OpenRUS 1.0.4"
+    bootloaderEntryName: "OpenRUS"
+    productUrl:          "https://github.com/OpenRUS/openrus-core"
+    supportUrl:          "https://github.com/OpenRUS/openrus-core/issues"
+    knownIssuesUrl:      "https://github.com/OpenRUS/openrus-core"
+    releaseNotesUrl:     "https://github.com/OpenRUS/openrus-core/releases"
+
+images:
+    productLogo:         "openrus_bear_logo.png"
+    productIcon:         "openrus_bear_logo.png"
+    productWelcome:      "welcome_cyberpunk.png"
+
+style:
+    SidebarBackground:        "#080c14"
+    SidebarText:              "#00f3ff"
+    SidebarTextCurrent:       "#ff007f"
+    SidebarBackgroundCurrent: "#131b2e"
+
+slideshow:               "show.qml"
+slideshowAPI:            2
