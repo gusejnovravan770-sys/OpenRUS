@@ -1,0 +1,32 @@
+name: Build OpenRUS Bootable ISO
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install ISO Building Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debootstrap squashfs-tools xorriso syslinux-utils isolinux mtools dosfstools
+
+      - name: Run OpenRUS ISO Builder
+        run: |
+          chmod +x iso-builder/build_openrus_iso.sh
+          chmod +x system/openrus-auto-drivers.sh
+          chmod +x system/openrus-updater.py
+          sudo bash iso-builder/build_openrus_iso.sh
+
+      - name: Upload Bootable ISO as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenRUS-Cyberpunk-v1.0-x86_64
+          path: /tmp/openrus-output/*.iso
+          retention-days: 14
