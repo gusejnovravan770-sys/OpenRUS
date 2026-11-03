@@ -25,82 +25,15 @@ jobs:
             mtools \
             dosfstools
 
-      - name: Build OpenRUS Hybrid ISO
+      - name: Build Bootable ISO
         run: |
           set -e
-          WORK_DIR="/tmp/openrus-build"
-          OUTPUT_DIR="/tmp/openrus-output"
-          ISO_NAME="OpenRUS-Cyberpunk-v1.0-x86_64.iso"
-          
-          mkdir -p "$WORK_DIR/chroot" "$WORK_DIR/iso/live" "$WORK_DIR/iso/isolinux" "$OUTPUT_DIR"
-          
-          echo "=== [1/5] Bootstrapping Base Debian System ==="
-          sudo debootstrap --arch=amd64 --variant=minbase bookworm "$WORK_DIR/chroot" http://deb.debian.org/debian/
-          
-          echo "=== [2/5] Installing Linux Kernel, Wi-Fi & Bluetooth Drivers ==="
-          sudo chroot "$WORK_DIR/chroot" /bin/bash -c "
-            export DEBIAN_FRONTEND=noninteractive
-            echo 'deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware' > /etc/apt/sources.list
-            apt-get update
-            apt-get install -y --no-install-recommends \
-              linux-image-amd64 \
-              live-boot \
-              systemd-sysv \
-              network-manager \
-              wireless-tools \
-              wpasupplicant \
-              bluez \
-              firmware-linux-free
-            echo 'openrus' > /etc/hostname
-            systemctl enable NetworkManager
-            systemctl enable bluetooth
-            apt-get clean
-          "
-          
-          echo "=== [3/5] Injecting OpenRUS Cyberpunk Environment ==="
-          sudo mkdir -p "$WORK_DIR/chroot/opt/openrus"
-          if [ -d "ui" ]; then
-            sudo cp -r ui assets system "$WORK_DIR/chroot/opt/openrus/" || true
-          fi
-          
-          echo "=== [4/5] Packing SquashFS Root Filesystem ==="
-          sudo mksquashfs "$WORK_DIR/chroot" "$WORK_DIR/iso/live/filesystem.squashfs" -comp xz -e boot
-          
-          # Copy vmlinuz and initrd
-          sudo cp $(ls -1 "$WORK_DIR/chroot/boot"/vmlinuz* | head -n 1) "$WORK_DIR/iso/live/vmlinuz"
-          sudo cp $(ls -1 "$WORK_DIR/chroot/boot"/initrd.img* | head -n 1) "$WORK_DIR/iso/live/initrd"
-          
-          echo "=== [5/5] Configuring ISOLINUX Bootloader & MBR ==="
-          sudo cp /usr/lib/ISOLINUX/isolinux.bin "$WORK_DIR/iso/isolinux/" 2>/dev/null || sudo cp /usr/lib/syslinux/isolinux.bin "$WORK_DIR/iso/isolinux/"
-          sudo cp /usr/lib/syslinux/modules/bios/*.c32 "$WORK_DIR/iso/isolinux/" 2>/dev/null || sudo cp /usr/lib/syslinux/bios/*.c32 "$WORK_DIR/iso/isolinux/" 2>/dev/null || true
-          
-          sudo bash -c "cat << 'EOF' > '$WORK_DIR/iso/isolinux/isolinux.cfg'
-UI vesamenu.c32
-PROMPT 0
-TIMEOUT 50
-DEFAULT openrus
-
-MENU TITLE OpenRUS OS - Cyberpunk Edition (Rufus MBR Ready)
-
-LABEL openrus
-  MENU LABEL Boot OpenRUS Live (Cyberpunk Bear)
-  KERNEL /live/vmlinuz
-  APPEND initrd=/live/initrd boot=live quiet splash
-EOF"
-          
-          echo "=== Creating Hybrid ISO (Rufus MBR + DD Compatible) ==="
-          sudo xorriso -as mkisofs \
-            -iso-level 3 \
-            -full-iso9660-filenames \
-            -volid "OPENRUS_OS" \
-            -eltorito-boot isolinux/isolinux.bin \
-            -eltorito-catalog isolinux/boot.cat \
-            -no-emul-boot -boot-load-size 4 -boot-info-table \
-            -output "$OUTPUT_DIR/$ISO_NAME" \
-            "$WORK_DIR/iso"
-            
-          sudo isohybrid "$OUTPUT_DIR/$ISO_NAME"
-          echo "=== Build Complete: $OUTPUT_DIR/$ISO_NAME ==="
+          cd iso-builder
+          mkdir -p /tmp/openrus-build/iso/isolinux
+          sudo cp /usr/lib/ISOLINUX/isolinux.bin /tmp/openrus-build/iso/isolinux/ 2>/dev/null || sudo cp /usr/lib/syslinux/isolinux.bin /tmp/openrus-build/iso/isolinux/ || true
+          sudo cp /usr/lib/syslinux/modules/bios/*.c32 /tmp/openrus-build/iso/isolinux/ 2>/dev/null || sudo cp /usr/lib/syslinux/bios/*.c32 /tmp/openrus-build/iso/isolinux/ 2>/dev/null || true
+          chmod +x build_openrus_iso.sh
+          sudo bash build_openrus_iso.sh
 
       - name: Upload Bootable ISO as Artifact
         uses: actions/upload-artifact@v4
