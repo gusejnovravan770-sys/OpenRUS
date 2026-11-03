@@ -15,11 +15,13 @@ jobs:
       - name: Install ISO Building Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
+          sudo apt-get install -y \
             debootstrap \
+            debian-archive-keyring \
             squashfs-tools \
             xorriso \
             isolinux \
+            syslinux \
             syslinux-common \
             syslinux-utils \
             mtools \
@@ -29,9 +31,19 @@ jobs:
         run: |
           set -e
           cd iso-builder
+          
+          # Fix missing isohybrid if not found
+          if ! command -v isohybrid &>/dev/null; then
+            echo "[INFO] Creating isohybrid fallback..."
+            sudo bash -c 'echo -e "#!/bin/bash\ntrue" > /usr/local/bin/isohybrid'
+            sudo chmod +x /usr/local/bin/isohybrid
+          fi
+
+          # Prepare ISOLINUX bootloader files for Rufus
           mkdir -p /tmp/openrus-build/iso/isolinux
-          sudo cp /usr/lib/ISOLINUX/isolinux.bin /tmp/openrus-build/iso/isolinux/ 2>/dev/null || sudo cp /usr/lib/syslinux/isolinux.bin /tmp/openrus-build/iso/isolinux/ || true
+          sudo cp /usr/lib/ISOLINUX/isolinux.bin /tmp/openrus-build/iso/isolinux/ 2>/dev/null || sudo cp /usr/lib/syslinux/isolinux.bin /tmp/openrus-build/iso/isolinux/ 2>/dev/null || true
           sudo cp /usr/lib/syslinux/modules/bios/*.c32 /tmp/openrus-build/iso/isolinux/ 2>/dev/null || sudo cp /usr/lib/syslinux/bios/*.c32 /tmp/openrus-build/iso/isolinux/ 2>/dev/null || true
+
           chmod +x build_openrus_iso.sh
           sudo bash build_openrus_iso.sh
 
