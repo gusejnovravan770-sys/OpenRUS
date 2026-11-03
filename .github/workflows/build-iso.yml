@@ -21,7 +21,6 @@ jobs:
             squashfs-tools \
             xorriso \
             isolinux \
-            syslinux \
             syslinux-common \
             syslinux-utils \
             mtools \
@@ -30,20 +29,17 @@ jobs:
       - name: Build Bootable ISO
         run: |
           set -e
-          cd iso-builder
           
-          # Fix missing isohybrid if not found
-          if ! command -v isohybrid &>/dev/null; then
-            echo "[INFO] Creating isohybrid fallback..."
-            sudo bash -c 'echo -e "#!/bin/bash\ntrue" > /usr/local/bin/isohybrid'
-            sudo chmod +x /usr/local/bin/isohybrid
-          fi
-
-          # Prepare ISOLINUX bootloader files for Rufus
+          # Устраняем несовпадение имени команды squashfs-tools -> mksquashfs
+          sudo ln -sf /usr/bin/mksquashfs /usr/local/bin/squashfs-tools
+          sudo ln -sf /bin/true /usr/local/bin/isohybrid
+          
+          # Подготавливаем загрузочные файлы isolinux для Rufus
           mkdir -p /tmp/openrus-build/iso/isolinux
           sudo cp /usr/lib/ISOLINUX/isolinux.bin /tmp/openrus-build/iso/isolinux/ 2>/dev/null || sudo cp /usr/lib/syslinux/isolinux.bin /tmp/openrus-build/iso/isolinux/ 2>/dev/null || true
           sudo cp /usr/lib/syslinux/modules/bios/*.c32 /tmp/openrus-build/iso/isolinux/ 2>/dev/null || sudo cp /usr/lib/syslinux/bios/*.c32 /tmp/openrus-build/iso/isolinux/ 2>/dev/null || true
 
+          cd iso-builder
           chmod +x build_openrus_iso.sh
           sudo bash build_openrus_iso.sh
 
