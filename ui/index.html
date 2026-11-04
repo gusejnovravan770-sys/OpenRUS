@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenRUS OS - Cyberpunk Edition</title>
+  <style>
+    :root {
+      --bg-dark: #080b11;
+      --bg-panel: rgba(13, 17, 28, 0.92);
+      --bg-card: rgba(22, 29, 46, 0.85);
+      --border-cyan: #00f3ff;
+      --border-pink: #ff007f;
+      --border-dim: rgba(0, 243, 255, 0.3);
+      --text-main: #e2e8f0;
+      --text-dim: #94a3b8;
+      --cyan-glow: 0 0 15px rgba(0, 243, 255, 0.5);
+      --pink-glow: 0 0 15px rgba(255, 0, 127, 0.5);
+      --font-cyber: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 75% 20%, #151a2e 0%, #0a0d17 60%, #04060a 100%);
+      font-family: var(--font-cyber);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .bg-watermark {
+      position: absolute;
+      top: 50%;
+      left: 55%;
+      transform: translate(-50%, -50%);
+      width: 580px;
+      height: 580px;
+      opacity: 0.07;
+      pointer-events: none;
+      z-index: 0;
+      filter: drop-shadow(0 0 30px var(--border-cyan));
+    }
+
+    /* LEFT VERTICAL DOCK */
+    .vertical-dock {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      bottom: 12px;
+      width: 72px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-dim);
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(0, 243, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 0;
+      z-index: 1000;
+      transition: border-color 0.3s;
+    }
+
+    .vertical-dock:hover { border-color: rgba(0, 243, 255, 0.6); }
+
+    .dock-apps {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .dock-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      color: #94a3b8;
+    }
+
+    .dock-btn svg { width: 26px; height: 26px; }
+
+    .dock-btn:hover {
+      background: rgba(0, 243, 255, 0.15);
+      border-color: var(--border-cyan);
+      color: var(--border-cyan);
+      box-shadow: var(--cyan-glow);
+      transform: translateY(-2px) scale(1.06);
+    }
+
+    .dock-btn .tooltip {
+      position: absolute;
+      left: 70px;
+      background: #0f172a;
+      border: 1px solid var(--border-cyan);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .dock-btn:hover .tooltip { opacity: 1; transform: translateX(0); }
+
+    .dock-spacer { flex: 1; }
+
+    .bear-start-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255, 0, 127, 0.2), rgba(0, 243, 255, 0.2));
+      border: 1.5px solid var(--border-pink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+    }
+
+    .bear-start-btn:hover {
+      transform: scale(1.1);
+      border-color: var(--border-cyan);
+      box-shadow: var(--cyan-glow), var(--pink-glow);
+    }
+
+    .bear-start-btn svg { width: 36px; height: 36px; }
+
+    /* DESKTOP SHORTCUTS */
+    .desktop-area {
+      position: absolute;
+      top: 24px;
+      left: 110px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      z-index: 10;
+    }
+
+    .desktop-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #64748b;
+      margin-bottom: -6px;
+    }
+
+    .desktop-shortcut {
+      width: 95px;
+      padding: 10px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: transparent;
+      border: 1px solid transparent;
+    }
+
+    .desktop-shortcut:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .shortcut-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--border-cyan);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .desktop-shortcut:hover .shortcut-icon {
+      transform: translateY(-3px);
+      box-shadow: var(--cyan-glow);
+      border-color: var(--border-cyan);
+    }
+
+    .shortcut-name {
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      color: #cbd5e1;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    /* BOTTOM RIGHT TRAY */
+    .system-tray {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      height: 48px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    .tray-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: color 0.2s, transform 0.2s;
+      position: relative;
+    }
+
+    .tray-item:hover { color: var(--border-cyan); transform: scale(1.05); }
+
+    .tray-clock {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--border-cyan);
+      border-left: 1px solid rgba(255, 255, 255, 0.15);
+      padding-left: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      line-height: 1.2;
+    }
+
+    .tray-clock .time { font-size: 14px; color: #00f3ff; text-shadow: 0 0 8px rgba(0, 243, 255, 0.4); }
+    .tray-clock .date { font-size: 10px; color: #64748b; font-weight: 500; }
+
+    /* REAL WI-FI POPUP */
+    .tray-popup {
+      position: fixed;
+      bottom: 74px;
+      right: 18px;
+      width: 330px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-cyan);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), var(--cyan-glow);
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 1500;
+    }
+
+    .tray-popup.open { display: flex; animation: popupSlide 0.2s ease-out; }
+
+    @keyframes popupSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .popup-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--border-cyan);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
+    }
+
+    .network-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .network-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: rgba(30, 41, 59, 0.5);
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .network-item:hover {
+      border-color: var(--border-cyan);
+      background: rgba(0, 243, 255, 0.15);
+    }
+
+    .network-item.connected {
+      border-color: #10b981;
+      color: #10b981;
+      font-weight: bold;
+    }
+
+    /* WI-FI PASSWORD MODAL */
+    .wifi-connect-box {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border-cyan);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+
+    .wifi-input {
+      background: #0a0f1a;
+      border: 1px solid var(--border-cyan);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    /* WINDOW SYSTEM */
+    .os-window {
+      position: absolute;
+      top: 70px;
+      left: 190px;
+      width: 720px;
+      height: 480px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 100;
+      resize: both;
+    }
+
+    .os-window.active {
+      border-color: var(--border-cyan);
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), var(--cyan-glow);
+      z-index: 200;
+    }
+
+    .window-titlebar {
+      height: 38px;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      cursor: move;
+    }
+
+    .window-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .window-controls { display: flex; align-items: center; gap: 8px; }
+
+    .win-btn {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+
+    .win-btn-close { background: #ff5f56; }
+    .win-btn-min { background: #ffbd2e; }
+    .win-btn-max { background: #27c93f; }
+
+    .window-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      color: #cbd5e1;
+    }
+
+    /* INSTALLER WINDOW SPECIFICS */
+    .install-box {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .install-logo { width: 90px; height: 90px; margin: 0 auto; }
+
+    .disk-selector {
+      background: #0f172a;
+      border: 1px solid var(--border-cyan);
+      color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00f3ff, #ff007f);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .btn-action {
+      background: linear-gradient(90deg, #00f3ff, #0066ff);
+      border: none;
+      color: #000;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .btn-action:hover { box-shadow: var(--cyan-glow); transform: translateY(-2px); }
+
+    /* BEAR START MENU */
+    .start-menu {
+      position: fixed;
+      bottom: 20px;
+      left: 96px;
+      width: 360px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--border-pink);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.9), var(--pink-glow);
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 1500;
+    }
+
+    .start-menu.open { display: flex; animation: startMenuOpen 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+    @keyframes startMenuOpen {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .start-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 0, 127, 0.3);
+      padding-bottom: 12px;
+    }
+
+    .start-header-logo { width: 44px; height: 44px; }
+
+    .start-header-text h3 { font-size: 16px; font-weight: 800; letter-spacing: 2px; color: #fff; }
+    .start-header-text h3 span { color: var(--border-cyan); }
+    .start-header-text p { font-size: 11px; color: var(--border-pink); letter-spacing: 1px; }
+
+    .start-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+    .start-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: rgba(30, 41, 59, 0.5);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .start-item:hover { border-color: var(--border-cyan); background: rgba(0, 243, 255, 0.15); transform: translateX(4px); }
+  </style>
+</head>
+<body>
+
+  <img src="../assets/openrus_bear_logo.svg" alt="OpenRUS Logo" class="bg-watermark">
+
+  <!-- LEFT VERTICAL DOCK -->
+  <div class="vertical-dock">
+    <div class="dock-apps">
+      <!-- 1. Диспетчер задач -->
+      <div class="dock-btn" onclick="openWindow('win-taskman')" title="Диспетчер задач">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <span class="tooltip">Диспетчер задач</span>
+      </div>
+
+      <!-- 2. MP3 Плеер -->
+      <div class="dock-btn" onclick="openWindow('win-mp3')" title="MP3 плеер">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"></polygon>
+        </svg>
+        <span class="tooltip">MP3 плеер</span>
+      </div>
+
+      <!-- 3. Проводник -->
+      <div class="dock-btn" onclick="openWindow('win-explorer')" title="Проводник">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span class="tooltip">Проводник</span>
+      </div>
+
+      <!-- 4. Терминал -->
+      <div class="dock-btn" onclick="openWindow('win-terminal')" title="Терминал">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="4 17 10 11 4 5"></polyline>
+          <line x1="12" y1="19" x2="20" y2="19"></line>
+        </svg>
+        <span class="tooltip">Терминал OpenRUS</span>
+      </div>
+
+      <!-- 5. Настройки & GitHub -->
+      <div class="dock-btn" onclick="openWindow('win-settings')" title="Настройки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span class="tooltip">Параметры & GitHub</span>
+      </div>
+    </div>
+
+    <div class="dock-spacer"></div>
+
+    <!-- 6. Пуск Медведь -->
+    <div class="bear-start-btn" onclick="toggleStartMenu()" title="Пуск OpenRUS">
+      <img src="../assets/openrus_bear_logo.svg" alt="Bear Start">
+    </div>
+  </div>
+
+  <!-- DESKTOP SHORTCUTS -->
+  <div class="desktop-area">
+    <div class="desktop-section-title">Установленные программы</div>
+    
+    <!-- OpenMarket -->
+    <div class="desktop-shortcut" ondblclick="openWindow('win-market')">
+      <div class="shortcut-icon">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+      </div>
+      <div class="shortcut-name">OpenMarket</div>
+    </div>
+
+    <!-- Браузер -->
+    <div class="desktop-shortcut" ondblclick="openWindow('win-browser')">
+      <div class="shortcut-icon" style="color: #ff007f; border-color: rgba(255, 0, 127, 0.4);">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <circle cx="12" cy="12" r="4"></circle>
+        </svg>
+      </div>
+      <div class="shortcut-name">Браузер</div>
+    </div>
+
+    <!-- УСТАНОВЩИК СИСТЕМЫ (Исчезнет после установки на диск!) -->
+    <div class="desktop-shortcut" id="shortcut-installer" ondblclick="openWindow('win-installer')">
+      <div class="shortcut-icon" style="color: #10b981; border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 10px rgba(16,185,129,0.3);">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+          <line x1="6" y1="6" x2="6.01" y2="6"></line>
+          <line x1="6" y1="18" x2="6.01" y2="18"></line>
+        </svg>
+      </div>
+      <div class="shortcut-name" style="color: #10b981; font-weight: bold;">Установка OpenRUS</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM RIGHT TRAY -->
+  <div class="system-tray">
+    <div class="tray-item" onclick="togglePopup('wifi-popup')" title="Wi-Fi">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+        <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+
+    <div class="tray-item" onclick="togglePopup('bt-popup')" title="Bluetooth">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
+      </svg>
+    </div>
+
+    <div class="tray-clock">
+      <div class="time" id="clock-time">00:00:00</div>
+      <div class="date" id="clock-date">04.11.2026</div>
+    </div>
+  </div>
+
+  <!-- REAL WI-FI SCANNER POPUP -->
+  <div class="tray-popup" id="wifi-popup">
+    <div class="popup-title">
+      <span>Wi-Fi Сети (Broadcom)</span>
+      <button onclick="refreshRealWifi()" style="background:none; border:none; color:#00f3ff; cursor:pointer;">🔄 Обновить</button>
+    </div>
+    <div class="network-list" id="real-wifi-list">
+      <div style="font-size:12px; color:#94a3b8; padding:8px;">Поиск беспроводных сетей в эфире...</div>
+    </div>
+
+    <div class="wifi-connect-box" id="wifi-connect-box">
+      <div id="wifi-target-ssid" style="font-size:12px; color:#00f3ff; font-weight:bold;"></div>
+      <input type="password" id="wifi-pwd-input" class="wifi-input" placeholder="Введите пароль Wi-Fi">
+      <div style="display:flex; gap:8px;">
+        <button class="btn-action" style="padding:6px 12px; font-size:12px;" onclick="submitRealWifiConnect()">Подключить</button>
+        <button onclick="document.getElementById('wifi-connect-box').style.display='none'" style="background:none; border:1px solid #64748b; color:#fff; border-radius:6px; padding:6px 10px; cursor:pointer;">Отмена</button>
+      </div>
+      <div id="wifi-status-text" style="font-size:11px; color:#38bdf8;"></div>
+    </div>
+  </div>
+
+  <!-- WINDOW: УСТАНОВЩИК OPENRUS НА ДИСК -->
+  <div class="os-window" id="win-installer" style="width: 600px; height: 460px;">
+    <div class="window-titlebar" onmousedown="startDrag(event, 'win-installer')">
+      <div class="window-title">💿 Мастер установки OpenRUS на ноутбук</div>
+      <div class="window-controls"><button class="win-btn win-btn-close" onclick="closeWindow('win-installer')"></button></div>
+    </div>
+    <div class="window-content">
+      <div class="install-box">
+        <img src="../assets/openrus_bear_logo.svg" class="install-logo">
+        <h3 style="color:#00f3ff;">Установка OpenRUS Cyberpunk Edition</h3>
+        <p style="font-size:13px; color:#94a3b8;">Установите систему на внутренний диск ноутбука, чтобы вытащить флешку и запускать систему без неё.</p>
+
+        <div style="text-align:left; background:rgba(0,0,0,0.4); padding:14px; border-radius:8px;">
+          <label style="font-size:12px; color:#cbd5e1; display:block; margin-bottom:6px;">Выберите диск для установки (MBR):</label>
+          <select id="installer-disk-select" class="disk-selector">
+            <option value="/dev/sda">Жесткий диск ноутбука (/dev/sda - Основной накопитель)</option>
+          </select>
+        </div>
+
+        <button class="btn-action" id="btn-start-install" onclick="startRealInstallation()">⚡ Установить OpenRUS на этот диск</button>
+
+        <div id="install-progress-section" style="display:none; text-align:left;">
+          <div id="install-step-text" style="font-size:12px; color:#00f3ff;">Подготовка...</div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="install-bar"></div></div>
+          <div id="install-done-banner" style="display:none; margin-top:14px;">
+            <div style="color:#10b981; font-weight:bold; font-size:14px;">✅ Установка успешно завершена!</div>
+            <p style="font-size:12px; color:#94a3b8; margin:6px 0;">Теперь вы можете вытащить флешку. Ноутбук будет загружаться с жесткого диска сам.</p>
+            <button class="btn-action" style="background:#10b981;" onclick="fetch('http://127.0.0.1:8080/api/system/reboot', {method:'POST'}); alert('Ноутбук перезагружается! Вынимайте флешку!');">🔄 Перезагрузить сейчас</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINDOW: ДИСПЕТЧЕР ЗАДАЧ (РЕАЛЬНЫЕ ДАННЫЕ) -->
+  <div class="os-window" id="win-taskman">
+    <div class="window-titlebar" onmousedown="startDrag(event, 'win-taskman')">
+      <div class="window-title">📊 Диспетчер задач OpenRUS (Реальное железо)</div>
+      <div class="window-controls"><button class="win-btn win-btn-close" onclick="closeWindow('win-taskman')"></button></div>
+    </div>
+    <div class="window-content">
+      <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; margin-bottom:16px;">
+        <div style="background:rgba(30,41,59,0.5); padding:12px; border-radius:8px; border:1px solid var(--border-cyan);">
+          <div style="font-size:11px; color:#94a3b8;">ПРОЦЕССОР (CPU)</div>
+          <div id="real-cpu-name" style="font-size:13px; color:#fff; font-weight:bold;">Загрузка...</div>
+          <div id="real-cpu-val" style="font-size:24px; color:#00f3ff; font-weight:800; font-family:var(--font-mono); margin-top:6px;">--%</div>
+        </div>
+        <div style="background:rgba(30,41,59,0.5); padding:12px; border-radius:8px; border:1px solid var(--border-pink);">
+          <div style="font-size:11px; color:#94a3b8;">ОПЕРАТИВНАЯ ПАМЯТЬ (RAM)</div>
+          <div id="real-ram-text" style="font-size:13px; color:#fff; font-weight:bold;">-- / -- GB</div>
+          <div id="real-ram-val" style="font-size:24px; color:#ff007f; font-weight:800; font-family:var(--font-mono); margin-top:6px;">--%</div>
+        </div>
+      </div>
+      <div style="font-size:12px; color:#94a3b8;">Беспроводной чип: Broadcom BCM4313 (Модуль brcmsmac / b43) [АКТИВЕН]</div>
+    </div>
+  </div>
+
+  <!-- WINDOW: НАСТРОЙКИ & РЕАЛЬНЫЙ GITHUB UPDATER -->
+  <div class="os-window" id="win-settings" style="width: 650px; height: 460px;">
+    <div class="window-titlebar" onmousedown="startDrag(event, 'win-settings')">
+      <div class="window-title">⚙️ Центр обновлений GitHub (https://github.com/gusejnovravan770-sys/OpenRUS)</div>
+      <div class="window-controls"><button class="win-btn win-btn-close" onclick="closeWindow('win-settings')"></button></div>
+    </div>
+    <div class="window-content">
+      <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-cyan); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="color:#00f3ff; font-size:16px;">Привязанный репозиторий GitHub</h3>
+          <span style="background:rgba(16,185,129,0.2); color:#10b981; padding:4px 10px; border-radius:6px; font-size:11px;">Официальный канал</span>
+        </div>
+        <div style="font-size:13px; font-family:var(--font-mono); color:#cbd5e1; background:#070a10; padding:12px; border-radius:8px;">
+          <div>URL: <a href="https://github.com/gusejnovravan770-sys/OpenRUS" target="_blank" style="color:#00f3ff;">https://github.com/gusejnovravan770-sys/OpenRUS</a></div>
+          <div id="gh-commit-info" style="margin-top:8px; color:#94a3b8;">Статус: Проверка связи с вашим репозиторием...</div>
+        </div>
+        <button class="btn-action" onclick="checkRealGitHubUpdates(this)">⚡ Проверить обновления коммитов GitHub</button>
+        <div id="gh-result-box" style="font-size:12px; color:#38bdf8; display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MP3, Проводник, Терминал, Маркет, Браузер (Остаются рабочими) -->
+  <div class="os-window" id="win-terminal" style="width: 680px; height: 420px;">
+    <div class="window-titlebar" onmousedown="startDrag(event, 'win-terminal')"><div class="window-title">💻 Терминал OpenRUS - bash 5.2</div><div class="window-controls"><button class="win-btn win-btn-close" onclick="closeWindow('win-terminal')"></button></div></div>
+    <div class="window-content" style="padding:10px; background:#06090e; font-family:var(--font-mono); color:#00f3ff; font-size:13px;" id="term-logs">
+Добро пожаловать в командную строку OpenRUS Cyberpunk Edition!
+Ядро: Linux 6.8.0-openrus-x86_64
+Wi-Fi: Broadcom BCM4313 [АКТИВЕН]
+Репозиторий GitHub: https://github.com/gusejnovravan770-sys/OpenRUS
+    </div>
+  </div>
+
+  <div class="os-window" id="win-mp3" style="width: 480px; height: 380px;">
+    <div class="window-titlebar" onmousedown="startDrag(event, 'win-mp3')"><div class="window-title">🎵 MP3 Плеер - CyberSound</div><div class="window-controls"><button class="win-btn win-btn-close" onclick="closeWindow('win-mp3')"></button></div></div>
+    <div class="window-content" style="text-align:center;">
+      <div style="font-size:48px; margin:20px 0;">🐻</div>
+      <h4>OpenRUS Synthwave Anthem</h4>
+      <p style="color:#94a3b8; font-size:12px; margin-bottom:20px;">Cyberpunk Bear Records</p>
+      <button class="btn-action" id="btn-play" onclick="toggleSynth()">▶ Запустить синтезатор</button>
+    </div>
+  </div>
+
+  <div class="os-window" id="win-explorer" style="width: 600px; height: 380px;">
+    <div class="window-titlebar" onmousedown="startDrag(event, 'win-explorer')"><div class="window-title">📁 Проводник OpenRUS</div><div class="window-controls"><button class="win-btn win-btn-close" onclick="closeWindow('win-explorer')"></button></div></div>
+    <div class="window-content">
+      <div style="display:flex; gap:16px;">
+        <div>💾 Жесткий диск</div>
+        <div>📁 Загрузки</div>
+        <div>🎵 Музыка</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="os-window" id="win-market" style="width: 620px; height: 400px;">
+    <div class="window-titlebar" onmousedown="startDrag(event, 'win-market')"><div class="window-title">🛍️ OpenMarket</div><div class="window-controls"><button class="win-btn win-btn-close" onclick="closeWindow('win-market')"></button></div></div>
+    <div class="window-content"><p>Магазин приложений OpenRUS готов к установке софта из GitHub.</p></div>
+  </div>
+
+  <div class="os-window" id="win-browser" style="width: 680px; height: 440px;">
+    <div class="window-titlebar" onmousedown="startDrag(event, 'win-browser')"><div class="window-title">🌐 Браузер OpenRUS</div><div class="window-controls"><button class="win-btn win-btn-close" onclick="closeWindow('win-browser')"></button></div></div>
+    <div class="window-content"><p>Браузер подключен через сеть OpenRUS.</p></div>
+  </div>
+
+  <script>
+    const BACKEND_URL = "http://127.0.0.1:8080";
+
+    // 1. Clock
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock-time').textContent = `${h}:${m}:${s}`;
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      document.getElementById('clock-date').textContent = `${day}.${month}.${year}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. Hide Installer if Already Installed on HDD/SSD!
+    async function checkInstalledState() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/installer/is_installed`);
+        const data = await res.json();
+        if (data.is_installed) {
+          const sc = document.getElementById("shortcut-installer");
+          if (sc) sc.style.display = "none";
+        }
+      } catch (e) {}
+    }
+    checkInstalledState();
+
+    // 3. Real Hardware Stats
+    async function fetchHardwareStats() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/system/stats`);
+        const data = await res.json();
+        document.getElementById("real-cpu-val").textContent = data.cpu_percent + "%";
+        document.getElementById("real-cpu-name").textContent = data.cpu_model;
+        document.getElementById("real-ram-val").textContent = data.ram_percent + "%";
+        document.getElementById("real-ram-text").textContent = `${data.ram_used_gb} / ${data.ram_total_gb} GB`;
+      } catch (e) {}
+    }
+    setInterval(fetchHardwareStats, 3000);
+    fetchHardwareStats();
+
+    // 4. Real Wi-Fi Scanner & Connector
+    let selectedSsid = "";
+    async function refreshRealWifi() {
+      const listEl = document.getElementById("real-wifi-list");
+      listEl.innerHTML = "<div style='font-size:12px; color:#00f3ff; padding:8px;'>Сканирование реального эфира...</div>";
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/wifi/list`);
+        const networks = await res.json();
+        listEl.innerHTML = "";
+        if (!networks || networks.length === 0) {
+          listEl.innerHTML = "<div style='font-size:12px; color:#94a3b8; padding:8px;'>Сети не найдены. Проверьте адаптер.</div>";
+          return;
+        }
+        networks.forEach(n => {
+          const item = document.createElement("div");
+          item.className = "network-item" + (n.connected ? " connected" : "");
+          item.innerHTML = `
+            <div>
+              <div>${n.connected ? "● " : ""}${n.ssid}</div>
+              <div style="font-size:10px; color:#64748b;">${n.security}</div>
+            </div>
+            <div style="color:var(--border-cyan);">${n.signal}%</div>
+          `;
+          item.onclick = () => promptWifiConnect(n.ssid);
+          listEl.appendChild(item);
+        });
+      } catch (e) {
+        listEl.innerHTML = "<div style='font-size:12px; color:#ff007f; padding:8px;'>Демо-режим (запустите openrus-backend для сканирования).</div>";
+      }
+    }
+
+    function promptWifiConnect(ssid) {
+      selectedSsid = ssid;
+      document.getElementById("wifi-target-ssid").textContent = "Подключение к: " + ssid;
+      document.getElementById("wifi-connect-box").style.display = "flex";
+      document.getElementById("wifi-pwd-input").value = "";
+      document.getElementById("wifi-pwd-input").focus();
+    }
+
+    async function submitRealWifiConnect() {
+      const pwd = document.getElementById("wifi-pwd-input").value;
+      const statusText = document.getElementById("wifi-status-text");
+      statusText.textContent = "Подключение...";
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/wifi/connect`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ssid: selectedSsid, password: pwd})
+        });
+        const result = await res.json();
+        if (result.success) {
+          statusText.style.color = "#10b981";
+          statusText.textContent = result.message;
+          setTimeout(() => {
+            document.getElementById("wifi-connect-box").style.display = "none";
+            refreshRealWifi();
+          }, 1500);
+        } else {
+          statusText.style.color = "#ff007f";
+          statusText.textContent = "Ошибка: " + result.message;
+        }
+      } catch (e) {
+        statusText.textContent = "Ошибка связи с сетевым сервисом.";
+      }
+    }
+
+    // 5. Real OS Disk Installation
+    async function startRealInstallation() {
+      const btn = document.getElementById("btn-start-install");
+      btn.style.display = "none";
+      const progressSec = document.getElementById("install-progress-section");
+      progressSec.style.display = "block";
+      const disk = document.getElementById("installer-disk-select").value;
+
+      try {
+        await fetch(`${BACKEND_URL}/api/installer/start`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({device: disk})
+        });
+
+        const timer = setInterval(async () => {
+          try {
+            const res = await fetch(`${BACKEND_URL}/api/installer/status`);
+            const status = await res.json();
+            document.getElementById("install-step-text").textContent = status.message;
+            document.getElementById("install-bar").style.width = status.percent + "%";
+
+            if (status.status === "completed") {
+              clearInterval(timer);
+              document.getElementById("install-done-banner").style.display = "block";
+              // Hide shortcut immediately!
+              const sc = document.getElementById("shortcut-installer");
+              if (sc) sc.style.display = "none";
+            } else if (status.status === "error") {
+              clearInterval(timer);
+              alert(status.message);
+              btn.style.display = "block";
+            }
+          } catch (e) {}
+        }, 1000);
+      } catch (e) {
+        alert("Не удалось запустить мастер установки.");
+      }
+    }
+
+    // 6. Real GitHub Update Checker connected to gusejnovravan770-sys/OpenRUS
+    async function checkRealGitHubUpdates(btn) {
+      btn.textContent = "Подключение к GitHub api...";
+      const resBox = document.getElementById("gh-result-box");
+      resBox.style.display = "block";
+      resBox.textContent = "Запрос к https://api.github.com/repos/gusejnovravan770-sys/OpenRUS/commits/main ...";
+
+      try {
+        const res = await fetch("https://api.github.com/repos/gusejnovravan770-sys/OpenRUS/commits/main");
+        const commit = await res.json();
+        btn.textContent = "⚡ Проверить обновления коммитов GitHub";
+        if (commit.sha) {
+          const sha = commit.sha.substring(0, 7);
+          const msg = commit.commit.message.split("\n")[0];
+          const author = commit.commit.author.name;
+          const date = new Date(commit.commit.author.date).toLocaleString("ru-RU");
+
+          resBox.innerHTML = `
+            <div style="color:#10b981; font-weight:bold;">✅ Соединение с вашим репозиторием активно!</div>
+            <div><strong>Последний коммит:</strong> <span style="color:#00f3ff;">${sha}</span></div>
+            <div><strong>Сообщение:</strong> ${msg}</div>
+            <div><strong>Автор:</strong> ${author} (${date})</div>
+          `;
+        } else {
+          resBox.textContent = "Ответ от GitHub получен. Репозиторий на связи!";
+        }
+      } catch (e) {
+        btn.textContent = "⚡ Проверить обновления коммитов GitHub";
+        resBox.textContent = "Ошибка соединения с интернетом/GitHub.";
+      }
+    }
+
+    // Window management
+    let highestZ = 200;
+    function openWindow(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.style.display = 'flex';
+      focusWindow(win);
+      if (id === 'win-settings') checkRealGitHubUpdates({textContent:""});
+    }
+
+    function closeWindow(id) {
+      const win = document.getElementById(id);
+      if (win) win.style.display = 'none';
+    }
+
+    function focusWindow(win) {
+      highestZ += 5;
+      win.style.zIndex = highestZ;
+      document.querySelectorAll('.os-window').forEach(w => w.classList.remove('active'));
+      win.classList.add('active');
+    }
+
+    let activeDrag = null, dragOffsetX = 0, dragOffsetY = 0;
+    function startDrag(e, winId) {
+      if (e.target.classList.contains('win-btn')) return;
+      activeDrag = document.getElementById(winId);
+      focusWindow(activeDrag);
+      const rect = activeDrag.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left;
+      dragOffsetY = e.clientY - rect.top;
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', stopDrag);
+    }
+
+    function onDrag(e) {
+      if (!activeDrag) return;
+      activeDrag.style.left = (e.clientX - dragOffsetX) + 'px';
+      activeDrag.style.top = (e.clientY - dragOffsetY) + 'px';
+    }
+
+    function stopDrag() {
+      activeDrag = null;
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', stopDrag);
+    }
+
+    function togglePopup(id) {
+      const el = document.getElementById(id);
+      const isVisible = el.classList.contains('open');
+      document.querySelectorAll('.tray-popup').forEach(p => p.classList.remove('open'));
+      if (!isVisible) {
+        el.classList.add('open');
+        if (id === 'wifi-popup') refreshRealWifi();
+      }
+    }
+
+    function toggleStartMenu() {
+      document.getElementById('start-menu').classList.toggle('open');
+    }
+
+    // Audio synth
+    let audioCtx = null, synthTimer = null, isPlaying = false;
+    function toggleSynth() {
+      const btn = document.getElementById("btn-play");
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (isPlaying) {
+        clearInterval(synthTimer);
+        isPlaying = false;
+        btn.textContent = "▶ Запустить синтезатор";
+      } else {
+        isPlaying = true;
+        btn.textContent = "⏸ Пауза";
+        const notes = [220, 261.63, 293.66, 329.63, 392, 440];
+        let i = 0;
+        synthTimer = setInterval(() => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.value = notes[i % notes.length];
+          gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+          i++;
+        }, 300);
+      }
+    }
+  </script>
+</body>
+</html>
