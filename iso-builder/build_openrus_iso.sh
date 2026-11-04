@@ -10,7 +10,7 @@ mkdir -p "$WORK_DIR/chroot" "$WORK_DIR/iso/live" "$WORK_DIR/iso/isolinux" "$WORK
 echo "[1/6] Установка базовой системы..."
 debootstrap --arch=amd64 bookworm "$WORK_DIR/chroot" http://deb.debian.org/debian/
 
-echo "[2/6] Установка ядра, драйверов Wi-Fi Broadcom и графической среды..."
+echo "[2/6] Установка универсальных драйверов (Broadcom, Intel, Realtek, Atheros)..."
 cat << 'EOF' > "$WORK_DIR/chroot/tmp/setup-chroot.sh"
 #!/bin/bash
 set -e
@@ -29,12 +29,14 @@ apt-get install -y --no-install-recommends \
     systemd-sysv \
     firmware-linux \
     firmware-brcm80211 \
-    firmware-iwlwifi \
     firmware-realtek \
+    firmware-iwlwifi \
+    firmware-atheros \
     firmware-misc-nonfree \
     network-manager \
     wireless-tools \
     wpasupplicant \
+    rfkill \
     bluez \
     pulseaudio \
     pavucontrol \
@@ -43,22 +45,24 @@ apt-get install -y --no-install-recommends \
     x11-xserver-utils \
     openbox \
     chromium \
+    parted \
+    rsync \
+    grub-pc \
     sudo \
     curl \
     git \
     python3
 
 echo "openrus" > /etc/hostname
+echo "127.0.0.1 localhost openrus" > /etc/hosts
 
 systemctl enable NetworkManager
 systemctl enable bluetooth
 
-# Создаем пользователя openrus без пароля
 useradd -m -s /bin/bash -G sudo,audio,video,netdev openrus || true
 passwd -d openrus || true
 echo "openrus ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/openrus
 
-# Автоматический вход без пароля при включении
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 cat << 'AUTOLOGIN' > /etc/systemd/system/getty@tty1.service.d/override.conf
 [Service]
@@ -66,7 +70,49 @@ ExecStart=
 ExecStart=-/sbin/agetty --autologin openrus --noclear %I $TERM
 AUTOLOGIN
 
-# Автозапуск графической оболочки OpenRUS на весь экран
+# Служба бэкенда для реального Wi-Fi и установщика
+cat << 'SERVICE' > /etc/systemd/system/openrus-backend.service
+[Unit]
+Description=OpenRUS Desktop System Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /opt/openrus/system/openrus-backend.py
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+systemctl enable openrus-backend.service
+
+# Автозапуск Wi-Fi чипов Broadcom/Intel/Realtek без терминала
+cat << 'AUTO_WIFI' > /usr/local/bin/openrus-wifi-autostart
+#!/bin/bash
+rfkill unblock all || true
+if lspci -nn | grep -iq "14e4:"; then
+    modprobe brcmsmac || modprobe b43 allhwsupport=1 || true
+fi
+systemctl restart NetworkManager || true
+AUTO_WIFI
+chmod +x /usr/local/bin/openrus-wifi-autostart
+
+cat << 'WIFI_SERVICE' > /etc/systemd/system/openrus-wifi.service
+[Unit]
+Description=OpenRUS Wi-Fi Auto-Initializer
+After=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/openrus-wifi-autostart
+
+[Install]
+WantedBy=multi-user.target
+WIFI_SERVICE
+systemctl enable openrus-wifi.service
+
 cat << 'PROFILE' > /home/openrus/.bash_profile
 if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
     exec startx
@@ -90,14 +136,12 @@ chmod +x "$WORK_DIR/chroot/tmp/setup-chroot.sh"
 chroot "$WORK_DIR/chroot" /tmp/setup-chroot.sh
 rm "$WORK_DIR/chroot/tmp/setup-chroot.sh"
 
-echo "[3/6] Копирование интерфейса OpenRUS..."
+echo "[3/6] Копирование интерфейса и системных служб OpenRUS..."
 mkdir -p "$WORK_DIR/chroot/opt/openrus"
 cp -r ../ui "$WORK_DIR/chroot/opt/openrus/" 2>/dev/null || true
 cp -r ../assets "$WORK_DIR/chroot/opt/openrus/" 2>/dev/null || true
-cp ../system/openrus-auto-drivers.sh "$WORK_DIR/chroot/usr/local/bin/openrus-auto-drivers" 2>/dev/null || true
-cp ../system/openrus-updater.py "$WORK_DIR/chroot/usr/local/bin/openrus-updater" 2>/dev/null || true
-chmod +x "$WORK_DIR/chroot/usr/local/bin/openrus-auto-drivers" 2>/dev/null || true
-chmod +x "$WORK_DIR/chroot/usr/local/bin/openrus-updater" 2>/dev/null || true
+cp -r ../system "$WORK_DIR/chroot/opt/openrus/" 2>/dev/null || true
+chmod +x "$WORK_DIR/chroot/opt/openrus/system"/*.py 2>/dev/null || true
 
 echo "[4/6] Упаковка SquashFS..."
 mksquashfs "$WORK_DIR/chroot" "$WORK_DIR/iso/live/filesystem.squashfs" -comp xz -e boot
@@ -123,7 +167,7 @@ LABEL openrus
   APPEND initrd=/live/initrd boot=live quiet splash components
 EOF
 
-echo "[6/6] Создание Hybrid ISO для Rufus..."
+echo "[6/6] Создание Hybrid ISO для Rufus (MBR + DD)..."
 xorriso -as mkisofs \
     -iso-level 3 \
     -full-iso9660-filenames \
@@ -135,5 +179,4 @@ xorriso -as mkisofs \
     "$WORK_DIR/iso"
 
 isohybrid "$ISO_OUTPUT_DIR/$ISO_NAME" 2>/dev/null || true
-
-echo "Сборка завершена: $ISO_OUTPUT_DIR/$ISO_NAME"
+echo "Сборка готова: $ISO_OUTPUT_DIR/$ISO_NAME"
